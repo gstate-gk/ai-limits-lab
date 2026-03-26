@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TABERU — 飲食店予約アプリ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Noto Sans JP', 'Inter', sans-serif;
+  background: #1a1a1a;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.phone-frame {
+  width: 390px;
+  height: 844px;
+  background: #FAFAF7;
+  border-radius: 44px;
+  overflow: hidden;
+  position: relative;
+  box-shadow:
+    0 0 0 2px #333,
+    0 0 0 6px #1a1a1a,
+    0 0 0 8px #333,
+    0 40px 80px rgba(0,0,0,0.5);
+}
+
+/* Status Bar */
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 28px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  position: relative;
+  z-index: 10;
+  background: #FAFAF7;
+}
+
+/* Scrollable Content */
+.content {
+  height: calc(100% - 88px - 40px);
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding-bottom: 16px;
+}
+.content::-webkit-scrollbar { display: none; }
+
+/* Header */
+.header {
+  padding: 12px 24px 16px;
+  background: #FAFAF7;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.header-greeting {
+  font-size: 13px;
+  color: #999;
+  font-weight: 400;
+}
+
+.header-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-top: 2px;
+}
+
+.header-title span {
+  color: #E85D3A;
+}
+
+.profile-pic {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FFB347, #E85D3A);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #fff;
+}
+
+/* Search */
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 14px;
+  padding: 12px 16px;
+  gap: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.search-bar input {
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  color: #333;
+  flex: 1;
+  font-family: inherit;
+}
+
+.search-bar input::placeholder {
+  color: #bbb;
+}
+
+.search-filter {
+  width: 34px;
+  height: 34px;
+  background: #E85D3A;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+/* Category Pills */
+.categories {
+  display: flex;
+  gap: 8px;
+  padding: 16px 24px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.categories::-webkit-scrollbar { display: none; }
+
+.cat-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 24px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  background: #fff;
+  color: #666;
+  border: 1px solid #eee;
+}
+
+.cat-pill.active {
+  background: #E85D3A;
+  color: #fff;
+  border-color: #E85D3A;
+}
+
+.cat-emoji {
+  font-size: 16px;
+}
+
+/* Special Banner */
+.banner {
+  margin: 0 24px 20px;
+  background: linear-gradient(135deg, #E85D3A, #FF8C42);
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.banner::after {
+  content: '';
+  position: absolute;
+  right: -20px;
+  top: -20px;
+  width: 120px;
+  height: 120px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 50%;
+}
+
+.banner-text {
+  flex: 1;
+  z-index: 1;
+}
+
+.banner-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(255,255,255,0.25);
+  padding: 3px 10px;
+  border-radius: 12px;
+  display: inline-block;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+
+.banner-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.banner-sub {
+  font-size: 12px;
+  color: rgba(255,255,255,0.8);
+}
+
+.banner-visual {
+  font-size: 48px;
+  z-index: 1;
+}
+
+/* Section */
+.section {
+  padding: 0 24px;
+  margin-bottom: 20px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.section-link {
+  font-size: 13px;
+  color: #E85D3A;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+/* Nearby Restaurants - Horizontal scroll */
+.restaurant-scroll {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  margin: 0 -24px;
+  padding: 0 24px;
+  scrollbar-width: none;
+}
+.restaurant-scroll::-webkit-scrollbar { display: none; }
+
+.restaurant-card {
+  min-width: 200px;
+  background: #fff;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.restaurant-img {
+  height: 130px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* CSSグラデーションで料理の画像風を演出 */
+.restaurant-img.sushi {
+  background: linear-gradient(135deg, #2d2d2d 0%, #4a3728 40%, #8B4513 70%, #CD853F 100%);
+}
+
+.restaurant-img.ramen {
+  background: linear-gradient(135deg, #f5e6d3 0%, #e6c9a8 30%, #d4a574 60%, #c48a4e 100%);
+}
+
+.restaurant-img.yakiniku {
+  background: linear-gradient(135deg, #3d1c00 0%, #6b3a2a 30%, #8b4513 50%, #cd5c08 80%, #ff6b35 100%);
+}
+
+.restaurant-img-label {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  font-size: 28px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.restaurant-rating {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(255,255,255,0.95);
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.restaurant-rating .star {
+  color: #FFB800;
+}
+
+.restaurant-fav {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 30px;
+  height: 30px;
+  background: rgba(255,255,255,0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.restaurant-info {
+  padding: 12px 14px;
+}
+
+.restaurant-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.restaurant-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #999;
+  margin-bottom: 8px;
+}
+
+.restaurant-tag {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #FFF3EE;
+  color: #E85D3A;
+  font-weight: 500;
+}
+
+.restaurant-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.restaurant-price {
+  font-size: 13px;
+  color: #666;
+}
+
+.restaurant-price span {
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.book-btn {
+  padding: 6px 14px;
+  background: #E85D3A;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.2s;
+}
+
+.book-btn:hover {
+  transform: scale(1.05);
+}
+
+/* Popular List - Vertical */
+.popular-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.popular-item {
+  display: flex;
+  gap: 14px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.popular-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.popular-img.italian {
+  background: linear-gradient(135deg, #e8d5b7, #c49a6c, #8B4513);
+}
+
+.popular-img.cafe {
+  background: linear-gradient(135deg, #f0e6d3, #d4b896, #a67c52);
+}
+
+.popular-img-emoji {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 32px;
+}
+
+.popular-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.popular-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 3px;
+}
+
+.popular-detail {
+  font-size: 11px;
+  color: #999;
+  margin-bottom: 6px;
+}
+
+.popular-bottom {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.popular-rating {
+  font-size: 11px;
+  color: #333;
+  font-weight: 500;
+}
+
+.popular-rating .star {
+  color: #FFB800;
+}
+
+.popular-distance {
+  font-size: 11px;
+  color: #bbb;
+}
+
+.popular-time {
+  font-size: 11px;
+  color: #4CAF50;
+  font-weight: 500;
+}
+
+/* Bottom Nav */
+.bottom-nav {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 88px;
+  background: #fff;
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+  z-index: 10;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: #ccc;
+  cursor: pointer;
+}
+
+.nav-item.active {
+  color: #E85D3A;
+}
+
+.nav-icon {
+  font-size: 22px;
+}
+
+.nav-badge {
+  position: relative;
+}
+
+.nav-badge::after {
+  content: '1';
+  position: absolute;
+  top: -5px;
+  right: -8px;
+  width: 14px;
+  height: 14px;
+  background: #E85D3A;
+  border-radius: 50%;
+  font-size: 8px;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>
+</head>
+<body>
+
+<div class="phone-frame">
+  <div class="status-bar">
+    <span>12:30</span>
+    <div>📶 🔋</div>
+  </div>
+
+  <div class="content">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-top">
+        <div>
+          <div class="header-greeting">こんにちは、慶太さん</div>
+          <div class="header-title">何を<span>食べ</span>ますか？</div>
+        </div>
+        <div class="profile-pic">K</div>
+      </div>
+
+      <div class="search-bar">
+        <span>🔍</span>
+        <input type="text" placeholder="エリア・ジャンル・店名で検索">
+        <div class="search-filter">☰</div>
+      </div>
+    </div>
+
+    <!-- Categories -->
+    <div class="categories">
+      <div class="cat-pill active"><span class="cat-emoji">🍽️</span> すべて</div>
+      <div class="cat-pill"><span class="cat-emoji">🍣</span> 寿司</div>
+      <div class="cat-pill"><span class="cat-emoji">🍜</span> ラーメン</div>
+      <div class="cat-pill"><span class="cat-emoji">🥩</span> 焼肉</div>
+      <div class="cat-pill"><span class="cat-emoji">🍝</span> イタリアン</div>
+      <div class="cat-pill"><span class="cat-emoji">🍰</span> カフェ</div>
+    </div>
+
+    <!-- Banner -->
+    <div class="banner">
+      <div class="banner-text">
+        <div class="banner-badge">期間限定</div>
+        <div class="banner-title">ランチ予約で20%OFF</div>
+        <div class="banner-sub">平日11:00〜14:00 対象店舗限定</div>
+      </div>
+      <div class="banner-visual">🍱</div>
+    </div>
+
+    <!-- Nearby -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">📍 近くのおすすめ</span>
+        <a href="#" class="section-link">もっと見る →</a>
+      </div>
+
+      <div class="restaurant-scroll">
+        <div class="restaurant-card">
+          <div class="restaurant-img sushi">
+            <div class="restaurant-fav">🤍</div>
+            <div class="restaurant-rating"><span class="star">★</span> 4.8</div>
+            <div class="restaurant-img-label">🍣</div>
+          </div>
+          <div class="restaurant-info">
+            <div class="restaurant-name">鮨 たかはし</div>
+            <div class="restaurant-meta">
+              <span>🚶 350m</span>
+              <span>⏱️ 5分</span>
+            </div>
+            <div class="restaurant-bottom">
+              <div class="restaurant-price"><span>¥3,000</span>〜/人</div>
+              <button class="book-btn">予約する</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="restaurant-card">
+          <div class="restaurant-img ramen">
+            <div class="restaurant-fav">❤️</div>
+            <div class="restaurant-rating"><span class="star">★</span> 4.6</div>
+            <div class="restaurant-img-label">🍜</div>
+          </div>
+          <div class="restaurant-info">
+            <div class="restaurant-name">麺屋 一心</div>
+            <div class="restaurant-meta">
+              <span>🚶 200m</span>
+              <span>⏱️ 3分</span>
+            </div>
+            <div class="restaurant-bottom">
+              <div class="restaurant-price"><span>¥900</span>〜/人</div>
+              <button class="book-btn">予約する</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="restaurant-card">
+          <div class="restaurant-img yakiniku">
+            <div class="restaurant-fav">🤍</div>
+            <div class="restaurant-rating"><span class="star">★</span> 4.9</div>
+            <div class="restaurant-img-label">🥩</div>
+          </div>
+          <div class="restaurant-info">
+            <div class="restaurant-name">焼肉 牛王</div>
+            <div class="restaurant-meta">
+              <span>🚶 500m</span>
+              <span>⏱️ 7分</span>
+            </div>
+            <div class="restaurant-bottom">
+              <div class="restaurant-price"><span>¥5,000</span>〜/人</div>
+              <button class="book-btn">予約する</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Popular -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">🔥 人気ランキング</span>
+        <a href="#" class="section-link">もっと見る →</a>
+      </div>
+
+      <div class="popular-list">
+        <div class="popular-item">
+          <div class="popular-img italian">
+            <div class="popular-img-emoji">🍝</div>
+          </div>
+          <div class="popular-info">
+            <div class="popular-name">トラットリア ベッラ</div>
+            <div class="popular-detail">イタリアン • ¥2,500〜 • 甲府駅南口</div>
+            <div class="popular-bottom">
+              <span class="popular-rating"><span class="star">★</span> 4.7 (234)</span>
+              <span class="popular-distance">📍 1.2km</span>
+              <span class="popular-time">● 空席あり</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="popular-item">
+          <div class="popular-img cafe">
+            <div class="popular-img-emoji">☕</div>
+          </div>
+          <div class="popular-info">
+            <div class="popular-name">Café Mont Blanc</div>
+            <div class="popular-detail">カフェ • ¥1,200〜 • 武田通り</div>
+            <div class="popular-bottom">
+              <span class="popular-rating"><span class="star">★</span> 4.5 (189)</span>
+              <span class="popular-distance">📍 800m</span>
+              <span class="popular-time">● 空席あり</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <div class="nav-item active">
+      <span class="nav-icon">🏠</span>
+      <span>ホーム</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">🔍</span>
+      <span>検索</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon nav-badge">📅</span>
+      <span>予約</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">❤️</span>
+      <span>お気に入り</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">👤</span>
+      <span>マイページ</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weather Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: #0a0a1a;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.phone-frame {
+  width: 390px;
+  height: 844px;
+  border-radius: 44px;
+  overflow: hidden;
+  position: relative;
+  background: linear-gradient(170deg, #1a1a3e 0%, #0d1b2a 30%, #1b2d4f 60%, #162447 100%);
+  box-shadow:
+    0 0 0 2px #333,
+    0 0 0 6px #0a0a1a,
+    0 0 0 8px #333,
+    0 40px 80px rgba(0,0,0,0.6);
+}
+
+/* 背景の装飾 — 星空風 */
+.phone-frame::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background:
+    radial-gradient(1px 1px at 50px 80px, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1px 1px at 150px 40px, rgba(255,255,255,0.3), transparent),
+    radial-gradient(1px 1px at 280px 120px, rgba(255,255,255,0.2), transparent),
+    radial-gradient(1px 1px at 320px 200px, rgba(255,255,255,0.3), transparent),
+    radial-gradient(1px 1px at 80px 300px, rgba(255,255,255,0.15), transparent),
+    radial-gradient(1px 1px at 200px 350px, rgba(255,255,255,0.25), transparent),
+    radial-gradient(1px 1px at 350px 400px, rgba(255,255,255,0.2), transparent),
+    radial-gradient(1px 1px at 40px 500px, rgba(255,255,255,0.15), transparent),
+    radial-gradient(1px 1px at 300px 550px, rgba(255,255,255,0.3), transparent);
+  z-index: 0;
+}
+
+/* 月の光 */
+.moon-glow {
+  position: absolute;
+  top: 60px;
+  right: 40px;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(200,210,255,0.12) 0%, transparent 60%);
+  border-radius: 50%;
+  z-index: 0;
+}
+
+/* Status Bar */
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 28px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.8);
+  position: relative;
+  z-index: 2;
+}
+
+/* Main Content */
+.main {
+  position: relative;
+  z-index: 2;
+  padding: 0 24px;
+  height: calc(100% - 88px);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.main::-webkit-scrollbar { display: none; }
+
+/* Location Header */
+.location {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  margin-bottom: 24px;
+}
+
+.location-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.location-pin {
+  font-size: 14px;
+}
+
+.location-name {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.location-arrow {
+  font-size: 10px;
+  color: rgba(255,255,255,0.5);
+  margin-left: 4px;
+}
+
+.notification-btn {
+  width: 40px;
+  height: 40px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  position: relative;
+}
+
+.notification-dot {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 6px;
+  height: 6px;
+  background: #ff6b6b;
+  border-radius: 50%;
+}
+
+/* Current Weather */
+.current-weather {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.weather-icon {
+  font-size: 80px;
+  line-height: 1;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 4px 12px rgba(255,200,100,0.3));
+}
+
+.temperature {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 88px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.temperature sup {
+  font-size: 36px;
+  font-weight: 400;
+  vertical-align: super;
+  color: rgba(255,255,255,0.6);
+}
+
+.weather-desc {
+  font-size: 16px;
+  color: rgba(255,255,255,0.6);
+  font-weight: 300;
+  margin-bottom: 4px;
+}
+
+.temp-range {
+  font-size: 13px;
+  color: rgba(255,255,255,0.4);
+}
+
+.temp-range .high { color: rgba(255,180,130,0.8); }
+.temp-range .low { color: rgba(130,180,255,0.8); }
+
+/* Weather Details */
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.detail-card {
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 14px 12px;
+  text-align: center;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.detail-icon {
+  font-size: 20px;
+  margin-bottom: 6px;
+}
+
+.detail-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 2px;
+}
+
+.detail-label {
+  font-size: 10px;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Hourly Forecast */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.8);
+}
+
+.section-link {
+  font-size: 12px;
+  color: rgba(130,170,255,0.7);
+  text-decoration: none;
+}
+
+.hourly-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  margin: 0 -24px;
+  padding: 0 24px 16px;
+  scrollbar-width: none;
+}
+.hourly-scroll::-webkit-scrollbar { display: none; }
+
+.hour-card {
+  min-width: 62px;
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 14px 8px;
+  text-align: center;
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: background 0.2s;
+}
+
+.hour-card.now {
+  background: rgba(100,140,255,0.2);
+  border-color: rgba(100,140,255,0.3);
+}
+
+.hour-time {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.hour-card.now .hour-time {
+  color: rgba(130,170,255,0.9);
+}
+
+.hour-icon {
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+
+.hour-temp {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* 7-Day Forecast */
+.daily-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 24px;
+}
+
+.daily-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 14px;
+}
+
+.daily-day {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.7);
+  width: 40px;
+}
+
+.daily-icon {
+  font-size: 20px;
+  width: 36px;
+  text-align: center;
+}
+
+.daily-bar-container {
+  flex: 1;
+  height: 4px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 2px;
+  margin: 0 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.daily-bar {
+  position: absolute;
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #82b4ff, #ffb482);
+}
+
+.daily-temps {
+  display: flex;
+  gap: 8px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+}
+
+.daily-low {
+  color: rgba(130,180,255,0.7);
+}
+
+.daily-high {
+  color: rgba(255,180,130,0.9);
+  font-weight: 600;
+}
+
+/* Bottom Nav */
+.bottom-nav {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 88px;
+  background: rgba(10,10,26,0.9);
+  backdrop-filter: blur(20px);
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  z-index: 10;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: rgba(255,255,255,0.3);
+  cursor: pointer;
+}
+
+.nav-item.active {
+  color: rgba(130,170,255,0.9);
+}
+
+.nav-icon {
+  font-size: 22px;
+}
+</style>
+</head>
+<body>
+
+<div class="phone-frame">
+  <div class="moon-glow"></div>
+
+  <div class="status-bar">
+    <span>9:41</span>
+    <div>📶 🔋</div>
+  </div>
+
+  <div class="main">
+    <!-- Location -->
+    <div class="location">
+      <div class="location-left">
+        <span class="location-pin">📍</span>
+        <span class="location-name">Kofu, Yamanashi</span>
+        <span class="location-arrow">▼</span>
+      </div>
+      <div class="notification-btn">
+        🔔
+        <div class="notification-dot"></div>
+      </div>
+    </div>
+
+    <!-- Current Weather -->
+    <div class="current-weather">
+      <div class="weather-icon">🌙</div>
+      <div class="temperature">12<sup>°C</sup></div>
+      <div class="weather-desc">Clear Night</div>
+      <div class="temp-range">
+        <span class="high">H: 18°</span> · <span class="low">L: 6°</span>
+      </div>
+    </div>
+
+    <!-- Details -->
+    <div class="details-grid">
+      <div class="detail-card">
+        <div class="detail-icon">💧</div>
+        <div class="detail-value">62%</div>
+        <div class="detail-label">Humidity</div>
+      </div>
+      <div class="detail-card">
+        <div class="detail-icon">💨</div>
+        <div class="detail-value">8 km/h</div>
+        <div class="detail-label">Wind</div>
+      </div>
+      <div class="detail-card">
+        <div class="detail-icon">👁️</div>
+        <div class="detail-value">16 km</div>
+        <div class="detail-label">Visibility</div>
+      </div>
+      <div class="detail-card">
+        <div class="detail-icon">🌡️</div>
+        <div class="detail-value">9°</div>
+        <div class="detail-label">Feels Like</div>
+      </div>
+      <div class="detail-card">
+        <div class="detail-icon">☀️</div>
+        <div class="detail-value">4</div>
+        <div class="detail-label">UV Index</div>
+      </div>
+      <div class="detail-card">
+        <div class="detail-icon">🌅</div>
+        <div class="detail-value">5:48</div>
+        <div class="detail-label">Sunrise</div>
+      </div>
+    </div>
+
+    <!-- Hourly -->
+    <div class="section-header">
+      <span class="section-title">Hourly Forecast</span>
+      <a href="#" class="section-link">Next 48h →</a>
+    </div>
+
+    <div class="hourly-scroll">
+      <div class="hour-card now">
+        <div class="hour-time">Now</div>
+        <div class="hour-icon">🌙</div>
+        <div class="hour-temp">12°</div>
+      </div>
+      <div class="hour-card">
+        <div class="hour-time">22:00</div>
+        <div class="hour-icon">🌙</div>
+        <div class="hour-temp">11°</div>
+      </div>
+      <div class="hour-card">
+        <div class="hour-time">23:00</div>
+        <div class="hour-icon">☁️</div>
+        <div class="hour-temp">10°</div>
+      </div>
+      <div class="hour-card">
+        <div class="hour-time">0:00</div>
+        <div class="hour-icon">☁️</div>
+        <div class="hour-temp">9°</div>
+      </div>
+      <div class="hour-card">
+        <div class="hour-time">1:00</div>
+        <div class="hour-icon">🌧️</div>
+        <div class="hour-temp">8°</div>
+      </div>
+      <div class="hour-card">
+        <div class="hour-time">2:00</div>
+        <div class="hour-icon">🌧️</div>
+        <div class="hour-temp">7°</div>
+      </div>
+    </div>
+
+    <!-- 7 Day -->
+    <div class="section-header">
+      <span class="section-title">7-Day Forecast</span>
+      <a href="#" class="section-link">Details →</a>
+    </div>
+
+    <div class="daily-list">
+      <div class="daily-row">
+        <span class="daily-day">Today</span>
+        <span class="daily-icon">🌙</span>
+        <div class="daily-bar-container">
+          <div class="daily-bar" style="left: 20%; width: 50%"></div>
+        </div>
+        <div class="daily-temps">
+          <span class="daily-low">6°</span>
+          <span class="daily-high">18°</span>
+        </div>
+      </div>
+      <div class="daily-row">
+        <span class="daily-day">Thu</span>
+        <span class="daily-icon">🌤️</span>
+        <div class="daily-bar-container">
+          <div class="daily-bar" style="left: 25%; width: 55%"></div>
+        </div>
+        <div class="daily-temps">
+          <span class="daily-low">8°</span>
+          <span class="daily-high">20°</span>
+        </div>
+      </div>
+      <div class="daily-row">
+        <span class="daily-day">Fri</span>
+        <span class="daily-icon">🌧️</span>
+        <div class="daily-bar-container">
+          <div class="daily-bar" style="left: 15%; width: 40%"></div>
+        </div>
+        <div class="daily-temps">
+          <span class="daily-low">5°</span>
+          <span class="daily-high">14°</span>
+        </div>
+      </div>
+      <div class="daily-row">
+        <span class="daily-day">Sat</span>
+        <span class="daily-icon">⛅</span>
+        <div class="daily-bar-container">
+          <div class="daily-bar" style="left: 22%; width: 48%"></div>
+        </div>
+        <div class="daily-temps">
+          <span class="daily-low">7°</span>
+          <span class="daily-high">17°</span>
+        </div>
+      </div>
+      <div class="daily-row">
+        <span class="daily-day">Sun</span>
+        <span class="daily-icon">☀️</span>
+        <div class="daily-bar-container">
+          <div class="daily-bar" style="left: 30%; width: 55%"></div>
+        </div>
+        <div class="daily-temps">
+          <span class="daily-low">9°</span>
+          <span class="daily-high">21°</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <div class="nav-item active">
+      <span class="nav-icon">🏠</span>
+      <span>Home</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">🔍</span>
+      <span>Search</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">🗺️</span>
+      <span>Map</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">⚙️</span>
+      <span>Settings</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
