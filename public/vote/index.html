@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Limits Lab — ブラインド投票</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Noto Sans JP', 'Inter', sans-serif;
+  background: #f5f5f5;
+  color: #333;
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+h1 {
+  font-size: 28px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #888;
+  font-size: 14px;
+  margin-bottom: 40px;
+}
+
+.instruction {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 32px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.instruction h2 {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.experiment {
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 32px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.experiment h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.experiment .prompt {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 20px;
+  padding: 8px 14px;
+  background: #f8f8f8;
+  border-radius: 8px;
+  border-left: 3px solid #ddd;
+}
+
+.comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 600px) {
+  .comparison {
+    grid-template-columns: 1fr;
+  }
+}
+
+.design-option {
+  text-align: center;
+}
+
+.design-option h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #555;
+}
+
+.design-option img {
+  width: 100%;
+  max-width: 360px;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.design-option img:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+.vote-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.vote-btn {
+  padding: 12px 32px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 2px solid #ddd;
+  background: #fff;
+  color: #333;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.vote-btn:hover {
+  border-color: #4A90D9;
+  background: #f0f6ff;
+}
+
+.vote-btn.selected {
+  border-color: #4A90D9;
+  background: #4A90D9;
+  color: #fff;
+}
+
+.vote-btn.draw {
+  padding: 12px 24px;
+  font-size: 13px;
+}
+
+.result-msg {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 13px;
+  color: #4A90D9;
+  min-height: 20px;
+}
+
+/* Submit */
+.submit-section {
+  text-align: center;
+  margin-top: 40px;
+}
+
+.submit-btn {
+  padding: 16px 48px;
+  background: #4A90D9;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s;
+}
+
+.submit-btn:hover {
+  background: #3a7bc8;
+}
+
+.submit-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+#submitResult {
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+/* Results */
+.results-section {
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px;
+  margin-top: 32px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  display: none;
+}
+
+.results-section h2 {
+  font-size: 20px;
+  margin-bottom: 16px;
+}
+
+.result-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.result-label {
+  width: 80px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.result-bar-bg {
+  flex: 1;
+  height: 24px;
+  background: #f0f0f0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.result-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.5s;
+}
+
+.result-bar-fill.a { background: #4A90D9; }
+.result-bar-fill.b { background: #E8854A; }
+
+.result-count {
+  font-size: 13px;
+  color: #999;
+  width: 40px;
+}
+
+/* Lightbox */
+.lightbox-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 1000;
+  cursor: zoom-out;
+  justify-content: center;
+  align-items: center;
+}
+
+.lightbox-overlay.active {
+  display: flex;
+}
+
+.lightbox-overlay img {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+.lightbox-close {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  color: #fff;
+  font-size: 32px;
+  cursor: pointer;
+  z-index: 1001;
+  background: rgba(0,0,0,0.4);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.design-option img {
+  cursor: zoom-in;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>AI Design ブラインド投票</h1>
+  <p class="subtitle">2つのAIが同じお題でデザインしました。どちらが良いですか？</p>
+
+  <div class="instruction">
+    <h2>投票のルール</h2>
+    <ul>
+      <li>Design A と Design B は、それぞれ異なるAIツールが生成したものです</li>
+      <li>どちらがどのAIかは投票完了後に公開します</li>
+      <li>直感で「こちらが良い」と思った方を選んでください</li>
+      <li>「引き分け」も選べます</li>
+    </ul>
+  </div>
+
+  <form id="voteForm">
+    <!-- Experiment 01 -->
+    <div class="experiment" id="exp01">
+      <h2>Q1. コーヒーショップのモバイルアプリ</h2>
+      <div class="prompt">プロンプト：「コーヒーショップのモバイルアプリのトップ画面」</div>
+      <div class="comparison">
+        <div class="design-option">
+          <h3>Design A</h3>
+          <img src="https://raw.githubusercontent.com/gstate-gk/ai-limits-lab/main/experiments/01-coffee-shop/figma_output.png" alt="Design A">
+        </div>
+        <div class="design-option">
+          <h3>Design B</h3>
+          <img src="https://raw.githubusercontent.com/gstate-gk/ai-limits-lab/main/experiments/01-coffee-shop/claude_output.png" alt="Design B">
+        </div>
+      </div>
+      <div class="vote-buttons">
+        <button type="button" class="vote-btn" data-q="q1" data-vote="A">Design A</button>
+        <button type="button" class="vote-btn draw" data-q="q1" data-vote="draw">引き分け</button>
+        <button type="button" class="vote-btn" data-q="q1" data-vote="B">Design B</button>
+      </div>
+      <div class="result-msg" id="msg-q1"></div>
+    </div>
+
+    <!-- Experiment 02 -->
+    <div class="experiment" id="exp02">
+      <h2>Q2. 天気アプリのダッシュボード</h2>
+      <div class="prompt">プロンプト：「天気アプリのダッシュボード」</div>
+      <div class="comparison">
+        <div class="design-option">
+          <h3>Design A</h3>
+          <img src="https://raw.githubusercontent.com/gstate-gk/ai-limits-lab/main/experiments/02-weather/claude_output.png" alt="Design A">
+        </div>
+        <div class="design-option">
+          <h3>Design B</h3>
+          <img src="https://raw.githubusercontent.com/gstate-gk/ai-limits-lab/main/experiments/02-weather/figma_output.png" alt="Design B">
+        </div>
+      </div>
+      <div class="vote-buttons">
+        <button type="button" class="vote-btn" data-q="q2" data-vote="A">Design A</button>
+        <button type="button" class="vote-btn draw" data-q="q2" data-vote="draw">引き分け</button>
+        <button type="button" class="vote-btn" data-q="q2" data-vote="B">Design B</button>
+      </div>
+      <div class="result-msg" id="msg-q2"></div>
+    </div>
+
+    <!-- Experiment 03 -->
+    <div class="experiment" id="exp03">
+      <h2>Q3. 飲食店の予約アプリ</h2>
+      <div class="prompt">プロンプト：「飲食店の予約アプリ」</div>
+      <div class="comparison">
+        <div class="design-option">
+          <h3>Design A</h3>
+          <img src="https://raw.githubusercontent.com/gstate-gk/ai-limits-lab/main/experiments/03-restaurant/figma_output.png" alt="Design A">
+        </div>
+        <div class="design-option">
+          <h3>Design B</h3>
+          <img src="https://raw.githubusercontent.com/gstate-gk/ai-limits-lab/main/experiments/03-restaurant/claude_output.png" alt="Design B">
+        </div>
+      </div>
+      <div class="vote-buttons">
+        <button type="button" class="vote-btn" data-q="q3" data-vote="A">Design A</button>
+        <button type="button" class="vote-btn draw" data-q="q3" data-vote="draw">引き分け</button>
+        <button type="button" class="vote-btn" data-q="q3" data-vote="B">Design B</button>
+      </div>
+      <div class="result-msg" id="msg-q3"></div>
+    </div>
+
+    <!-- Experiment 04 -->
+    <div class="experiment" id="exp04">
+      <h2>Q4. 温泉旅館の予約アプリ（60代夫婦向け）</h2>
+      <div class="prompt">プロンプト：「60代夫婦が使う温泉旅館の予約アプリのトップ画面」</div>
+      <div class="comparison">
+        <div class="design-option">
+          <h3>Design A</h3>
+          <img src="https://raw.githubusercontent.com/gstate-gk/ai-limits-lab/main/experiments/04-onsen/claude_output.png" alt="Design A">
+        </div>
+        <div class="design-option">
+          <h3>Design B</h3>
+          <img src="https://raw.githubusercontent.com/gstate-gk/ai-limits-lab/main/experiments/04-onsen/figma_output.png" alt="Design B">
+        </div>
+      </div>
+      <div class="vote-buttons">
+        <button type="button" class="vote-btn" data-q="q4" data-vote="A">Design A</button>
+        <button type="button" class="vote-btn draw" data-q="q4" data-vote="draw">引き分け</button>
+        <button type="button" class="vote-btn" data-q="q4" data-vote="B">Design B</button>
+      </div>
+      <div class="result-msg" id="msg-q4"></div>
+    </div>
+
+    <div class="submit-section">
+      <button type="button" class="submit-btn" id="submitBtn" disabled>投票する（4問すべて回答してください）</button>
+      <div id="submitResult"></div>
+    </div>
+  </form>
+
+  <div class="results-section" id="resultsSection">
+    <h2>正解発表</h2>
+    <p style="margin-bottom: 16px; font-size: 14px; color: #666;">投票ありがとうございました！各デザインの正体を公開します。</p>
+    <div id="revealList"></div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox-overlay" id="lightbox">
+  <div class="lightbox-close" id="lightboxClose">✕</div>
+  <img id="lightboxImg" src="" alt="拡大表示">
+</div>
+
+<script>
+// Lightbox
+document.querySelectorAll('.design-option img').forEach(img => {
+  img.addEventListener('click', () => {
+    document.getElementById('lightboxImg').src = img.src;
+    document.getElementById('lightbox').classList.add('active');
+  });
+});
+
+document.getElementById('lightbox').addEventListener('click', () => {
+  document.getElementById('lightbox').classList.remove('active');
+});
+
+document.getElementById('lightboxClose').addEventListener('click', () => {
+  document.getElementById('lightbox').classList.remove('active');
+});
+
+// A/Bの割り当て（ランダム化されている）
+// Q1: A=Figma, B=Claude
+// Q2: A=Claude, B=Figma
+// Q3: A=Figma, B=Claude
+// Q4: A=Claude, B=Figma
+const answerKey = {
+  q1: { A: 'Figma', B: 'Claude' },
+  q2: { A: 'Claude', B: 'Figma' },
+  q3: { A: 'Figma', B: 'Claude' },
+  q4: { A: 'Claude', B: 'Figma' },
+};
+
+const votes = {};
+const questions = ['q1', 'q2', 'q3', 'q4'];
+
+// Vote button handling
+document.querySelectorAll('.vote-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const q = btn.dataset.q;
+    const vote = btn.dataset.vote;
+    votes[q] = vote;
+
+    // Update UI
+    document.querySelectorAll(`.vote-btn[data-q="${q}"]`).forEach(b => {
+      b.classList.remove('selected');
+    });
+    btn.classList.add('selected');
+    document.getElementById(`msg-${q}`).textContent = '✓ 選択済み';
+
+    // Check if all answered
+    const allAnswered = questions.every(q => votes[q]);
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = !allAnswered;
+    if (allAnswered) {
+      submitBtn.textContent = '投票する';
+    }
+  });
+});
+
+// Submit
+document.getElementById('submitBtn').addEventListener('click', () => {
+  const allAnswered = questions.every(q => votes[q]);
+  if (!allAnswered) return;
+
+  // Create GitHub Issue comment with votes
+  const voteText = questions.map(q => {
+    const labels = { q1: 'コーヒーショップ', q2: '天気アプリ', q3: '飲食店予約', q4: '温泉旅館' };
+    const choice = votes[q] === 'draw' ? '引き分け' : `Design ${votes[q]}`;
+    const actual = votes[q] === 'draw' ? '引き分け' : answerKey[q][votes[q]];
+    return `${labels[q]}: ${choice}（= ${actual}）`;
+  }).join('\n');
+
+  // Count Claude wins
+  let claudeWins = 0, figmaWins = 0, draws = 0;
+  questions.forEach(q => {
+    if (votes[q] === 'draw') { draws++; return; }
+    const chosen = answerKey[q][votes[q]];
+    if (chosen === 'Claude') claudeWins++;
+    else figmaWins++;
+  });
+
+  // APIに投票を送信
+  fetch('/api/vote', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(votes),
+  }).then(r => r.json()).then(data => {
+    console.log('Vote saved:', data);
+  }).catch(err => {
+    console.error('Vote save failed:', err);
+  });
+
+  // Show results
+  const resultsSection = document.getElementById('resultsSection');
+  resultsSection.style.display = 'block';
+
+  const labels = { q1: 'Q1 コーヒーショップ', q2: 'Q2 天気アプリ', q3: 'Q3 飲食店予約', q4: 'Q4 温泉旅館' };
+  let revealHTML = '';
+  questions.forEach(q => {
+    const choice = votes[q];
+    const choiceLabel = choice === 'draw' ? '引き分け' : `Design ${choice}`;
+    revealHTML += `<div style="padding: 12px 16px; background: #f8f8f8; border-radius: 10px; margin-bottom: 8px;">
+      <strong>${labels[q]}</strong><br>
+      あなたの選択: ${choiceLabel}<br>
+      Design A = <strong>${answerKey[q].A}</strong> / Design B = <strong>${answerKey[q].B}</strong>
+      ${choice !== 'draw' ? `<br>→ あなたは <strong style="color: ${answerKey[q][choice] === 'Claude' ? '#4A90D9' : '#E8854A'}">${answerKey[q][choice]}</strong> を選びました` : ''}
+    </div>`;
+  });
+
+  revealHTML += `<div style="margin-top: 20px; padding: 16px; background: #e8f4ff; border-radius: 10px; text-align: center;">
+    <strong>結果: Claude ${claudeWins}勝 / Figma ${figmaWins}勝 / 引き分け ${draws}</strong>
+  </div>`;
+
+  document.getElementById('revealList').innerHTML = revealHTML;
+
+  // Disable further voting
+  document.querySelectorAll('.vote-btn').forEach(b => b.disabled = true);
+  document.getElementById('submitBtn').style.display = 'none';
+  document.getElementById('submitResult').innerHTML = '投票完了！下にスクロールして結果をご確認ください。';
+
+  // 集計結果を取得して表示
+  fetch('/api/vote')
+    .then(r => r.json())
+    .then(data => {
+      if (data.totalVotes > 0) {
+        const aggLabels = { q1: 'Q1 コーヒーショップ', q2: 'Q2 天気アプリ', q3: 'Q3 飲食店予約', q4: 'Q4 温泉旅館' };
+        let aggHTML = `<h2 style="margin-top: 32px;">全体集計（${data.totalVotes}票）</h2>`;
+        questions.forEach(q => {
+          const qData = data.questions[q];
+          const total = qData.A + qData.B + qData.draw;
+          if (total === 0) return;
+          // A/Bを実名に変換
+          const nameA = answerKey[q].A;
+          const nameB = answerKey[q].B;
+          const claudeVotes = nameA === 'Claude' ? qData.A : qData.B;
+          const figmaVotes = nameA === 'Figma' ? qData.A : qData.B;
+          const claudePct = Math.round(claudeVotes / total * 100);
+          const figmaPct = Math.round(figmaVotes / total * 100);
+          const drawPct = Math.round(qData.draw / total * 100);
+          aggHTML += `<div style="padding: 12px 16px; background: #f8f8f8; border-radius: 10px; margin: 8px 0;">
+            <strong>${aggLabels[q]}</strong>
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+              <span style="width: 60px; font-size: 12px; color: #4A90D9; font-weight: 600;">Claude</span>
+              <div style="flex: 1; height: 20px; background: #eee; border-radius: 4px; overflow: hidden; display: flex;">
+                <div style="width: ${claudePct}%; background: #4A90D9; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 10px; font-weight: 600;">${claudeVotes}</div>
+                <div style="width: ${drawPct}%; background: #ccc; display: flex; align-items: center; justify-content: center; color: #666; font-size: 10px;">${qData.draw > 0 ? qData.draw : ''}</div>
+                <div style="width: ${figmaPct}%; background: #E8854A; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 10px; font-weight: 600;">${figmaVotes}</div>
+              </div>
+              <span style="width: 60px; font-size: 12px; color: #E8854A; font-weight: 600; text-align: right;">Figma</span>
+            </div>
+          </div>`;
+        });
+        document.getElementById('revealList').innerHTML += aggHTML;
+      }
+    })
+    .catch(err => console.error('Failed to fetch results:', err));
+
+  // Scroll to results
+  resultsSection.scrollIntoView({ behavior: 'smooth' });
+});
+</script>
+
+</body>
+</html>
